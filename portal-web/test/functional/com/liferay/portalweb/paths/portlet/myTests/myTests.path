@@ -1,0 +1,36 @@
+<html>
+<head>
+<title>myTests</title>
+</head>
+
+<body>
+<table border="1" cellpadding="1" cellspacing="1">
+<thead>
+<tr><td rowspan="1" colspan="3">myTests</td></tr>
+</thead>
+
+<tbody>
+<tr>
+	<td>CONFIGURATION</td>
+	<td>//*[@id="nav_control_panel.configuration"]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CLOSE_SUMULATION</td>
+	<td>//*[@id="_com_liferay_product_navigation_simulation_web_portlet_SimulationPortlet_simulationPanelId"]//button[contains(@class, 'btn-monospaced')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ALERTE</td>
+	<td>//*[@id="_com_liferay_product_navigation_simulation_web_portlet_SimulationPortlet_customSizeSelector"]//div[contains(@class, 'autofit-col-expand')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>APPLY_CUSTOM_SIZE</td>
+	<td>//*[@id="_com_liferay_product_navigation_simulation_web_portlet_SimulationPortlet_customSizeSelector"]//button[contains(@class, 'btn-secondary')]</td>
+	<td></td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

@@ -1,0 +1,132 @@
+@component-name = "portal-web-forms-and-data-lists"
+definition {
+
+	property testray.main.component.name = "Forms";
+
+	setUp {
+		TestCase.setUpPortalInstance();
+
+		User.firstLoginPG();
+
+		Navigator.openURL();
+	}
+
+	tearDown {
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test");
+	}
+
+	@description = "Create a New form with Text feild and Numeric feild"
+	@priority = 5
+	test AddFormWithTextFeildAndNumericFeild {
+		task ("Given: create the form with the feilds") {
+			var formName = "Form 1";
+			var formPageName = "English";
+			var textLabelFrench ="nom et prénom";
+			var ageLabelFrench="âge";
+			var textLabelEnglish ="Full Name";
+			var ageLabelEnglish="Age";
+			var englishFullName = "full name en";
+			var englishAge = 122;
+			var frenchFullName = "nom et prnom fr";
+			var frenchAge = 122;
+			FormsAdmin.addForm();
+
+			Form.editName(formName = ${formName});
+
+			Form.editPageTitle(
+				formPageName = ${formPageName},
+				formTitleNumber = 1);
+
+			Form.gotoAddField(
+				fieldPositionNumber = 0,
+				fieldType = "Text");
+
+			Form.editFieldLabelMetal(
+				fieldValue = ${textLabelEnglish}
+			);
+
+			Form.closeSidebar();
+
+			Form.save();
+
+			Form.gotoAddField(
+				fieldPositionNumber = 1,
+				fieldType = "Numeric");
+
+			Form.editFieldLabelMetal(fieldValue = ${ageLabelEnglish});
+
+			Form.save();
+		}
+
+		task ("When: translate the label fields") {
+			Form.addTranslation(localizedLanguage = "French (France)");
+
+			Form.editPageTitle(
+				formPageName = "Francais",
+				formTitleNumber = 1);
+
+			Click(
+				key_name = "Full Name",
+				locator1 = "FormFields#FIELD_TARGET_LABEL");
+
+			FormFields.editText(
+				fieldName = "Label",
+				fieldValue = ${textLabelFrench});
+
+			Click(
+				key_name = "Age",
+				locator1 = "FormFields#FIELD_TARGET_LABEL");
+
+			FormFields.editText(
+				fieldName = "Label",
+				fieldValue = ${ageLabelFrench});
+
+			Form.save();
+		}
+
+		task ("Then: publish and validate the form") {
+			Form.publishForm();
+
+			FormsAdminNavigator.gotoPublishedForm();
+
+			FormFields.editText(
+				fieldName = "Full Name",
+				fieldValue = ${englishFullName});
+
+			FormFields.editText(
+				fieldName = "Age",
+				fieldValue = ${englishAge});
+
+			FormPortlet.submit();
+
+			Form.submitAgain();
+
+			FormPortletConfiguration.changeLanguage(
+				currentLanguage = "en-US",
+				newLanguage = "français-France");
+
+			FormFields.editText(
+				fieldName = "nom et prénom",
+				fieldValue = ${frenchFullName});
+
+			FormFields.editText(
+				fieldName = "âge",
+				fieldValue = ${frenchAge});
+
+			FormPortlet.submit();
+
+			Form.submitAgain();
+
+			Navigator.openURL();
+
+			ProductMenu.gotoPortlet(
+				category = "Content & Data",
+				portlet = "Forms");
+
+			FormsAdminNavigator.gotoViewEntries();
+		}
+	}
+
+}
