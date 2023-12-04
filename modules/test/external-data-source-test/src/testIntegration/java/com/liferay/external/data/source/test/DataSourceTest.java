@@ -63,6 +63,7 @@ public class DataSourceTest {
 			preparedStatement.executeUpdate();
 		}
 
+		// test
 		long pk = RandomTestUtil.nextLong();
 
 		TestEntity testEntity = _persistence.create(pk);
