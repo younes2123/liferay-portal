@@ -1,0 +1,190 @@
+@component-name = "portal-solutions"
+definition {
+
+	property app.server.types = "tomcat";
+	property database.bare.enabled = "true";
+	property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver";
+	property minimum.slave.ram = "24";
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property skip.start.app.server = "true";
+	property test.assert.warning.exceptions = "true";
+	property test.liferay.virtual.instance = "false";
+	property test.run.type = "single";
+	property testcase.url = "file:///opt/dev/projects/github/liferay-portal/";
+	property testray.main.component.name = "Upgrades Solutions";
+
+	setUp {
+		Upgrade.startReleasedBundle();
+	}
+
+	@priority = 5
+	test ApprovedOrganizationsWithCommentsAreAvailableAfterUpgrade {
+		task ("Run pre-upgrade steps: Create an EVP site and an organization") {
+			User.firstLoginUI(
+				password = "test",
+				specificURL = "http://localhost:8080",
+				userEmailAddress = "test@liferay.com");
+
+			Site.openSitesAdmin(baseURL = "http://localhost:8080");
+
+			EVPUtils.addEVPSite();
+
+			EVPUtils.addLiferayManagerUserRole();
+
+			var organizationId = JSONEVP.createOrganization(
+				accountOwnerName = "User 4",
+				bankingInfo = "Bank Test",
+				city = "City Test",
+				contactEmail = "OrganizationTest@liferay.com",
+				contactName = "Contact Test",
+				contactPhone = 12345,
+				country = "Country Test",
+				emailAddress = "employee@liferay.com",
+				key_status = "awaitingApprovalOnEvp",
+				organizationName = "Organization test",
+				organizationSite = "www.test.com.br",
+				smallDescription = "Description Test",
+				state = "State Test",
+				status = "Awaiting Approval On EVP",
+				street = "Street Test",
+				taxId = 12345,
+				zipCode = "12.345-67");
+		}
+
+		task ("Upgrade") {
+			Upgrade.restoreOriginalBundleAndUpgrade();
+
+			TestUtils.hardRefresh();
+		}
+
+		task ("Approve organization with comments are available after upgrade") {
+			EVPUtils.gotoEVP();
+
+			EVPUtils.managerApproval(
+				listingPage = "Organization",
+				organizationName = "Organization Test");
+
+			EVPUtils.viewStatus(
+				organizationName = "Organization Test",
+				status = "Awaiting Finance Approval");
+
+			EVPOrganization.kebabMenuOrganization(organizationName = "Organization Test");
+
+			MenuItem.click(menuItem = "Details");
+
+			EVPUtils.assertHeadersTitle(listHeaderTitle = "Organization Test,Your organization has been approved!");
+		}
+	}
+
+	@priority = 5
+	test CanViewExistingRequestsAfterUpgrade {
+		task ("Run pre-upgrade steps: Create an EVP site and an organization") {
+			User.firstLoginUI(
+				password = "test",
+				specificURL = "http://localhost:8080",
+				userEmailAddress = "test@liferay.com");
+
+			Site.openSitesAdmin(baseURL = "http://localhost:8080");
+
+			EVPUtils.addEVPSite();
+
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "employee@liferay.com",
+				userLoginFullName = "Employee User");
+
+			EVPUtils.gotoEVP();
+
+			var organizationId = JSONEVP.createOrganization(
+				accountOwnerName = "User 4",
+				bankingInfo = "Bank Test",
+				city = "City Test",
+				contactEmail = "OrganizationTest@liferay.com",
+				contactName = "Contact Test",
+				contactPhone = 12345,
+				country = "Country Test",
+				emailAddress = "employee@liferay.com",
+				key_status = "awaitingApprovalOnEvp",
+				organizationName = "Organization test",
+				organizationSite = "www.test.com.br",
+				smallDescription = "Description Test",
+				state = "State Test",
+				status = "Awaiting Approval On EVP",
+				street = "Street Test",
+				taxId = 12345,
+				zipCode = "12.345-67");
+
+			EVPRequest.goToCreateRequest();
+
+			EVPRequest.fillRequestForm(
+				grantAmount = 10,
+				grantRequestType = "Proposed",
+				organization = ${organizationId},
+				phoneNumber = 12345,
+				requestBehalf = "Global/Local Poor",
+				requestDescription = "Request Description Test",
+				requestPurposes = "Basic Education",
+				requestType = "Grant");
+		}
+
+		task ("Upgrade") {
+			Upgrade.restoreOriginalBundleAndUpgrade();
+
+			TestUtils.hardRefresh();
+		}
+
+		task ("Assert that the request is available after upgrade") {
+			EVPNavigator.goToNavItem(navItem = "Request");
+
+			EVPUtils.viewStatus(
+				organizationName = "Organization Test",
+				status = "Awaiting Approval On EVP");
+		}
+	}
+
+	@priority = 5
+	test EditedDataPersistsAfterUpgrade {
+		task ("Run pre-upgrade steps: Create an EVP site") {
+			User.firstLoginUI(
+				password = "test",
+				specificURL = "http://localhost:8080",
+				userEmailAddress = "test@liferay.com");
+
+			Site.openSitesAdmin(baseURL = "http://localhost:8080");
+
+			EVPUtils.addEVPSite();
+
+			ApplicationsMenu.gotoPortlet(
+				category = "Object",
+				panel = "Control Panel",
+				portlet = "EVP Homepage Data");
+
+			ObjectAdmin.selectKebabMenuOption(kebabOption = "View");
+
+			EVPUtils.editObjectEVP(
+				employeesParticipated = 2000,
+				grantMoneyDistributed = 8000000,
+				numberOfNonprofitsServed = 1560,
+				serviceHoursCompleted = 30000,
+				yearsEVP = 8);
+		}
+
+		task ("Upgrade") {
+			Upgrade.restoreOriginalBundleAndUpgrade();
+
+			TestUtils.hardRefresh();
+		}
+
+		task ("Assert that the same data on 'Data on EVP' Section persists after upgrade") {
+			EVPUtils.gotoEVP();
+
+			EVPUtils.assertDataOnEVPValue(
+				employeesParticipated = 2000,
+				grantMoneyDistributed = "8M",
+				numberOfNonprofitsServed = 1560,
+				serviceHoursCompleted = 30000,
+				yearsEVP = 8);
+		}
+	}
+
+}
